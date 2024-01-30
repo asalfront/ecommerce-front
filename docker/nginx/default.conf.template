@@ -1,0 +1,11 @@
+server {
+  listen 80;
+  server_name ${NGINX_HOST};
+
+  error_log  /var/log/nginx/error.log;
+  access_log /var/log/nginx/access.log;
+
+  location / {
+    proxy_pass http://app:5180;
+  }
+}

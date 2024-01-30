@@ -1,0 +1,11 @@
+{
+	"HOSTNAME": "e2fe8605b298",
+	"REMOTE_CONTAINERS_IPC": "/tmp/vscode-remote-containers-ipc-28b3e8da2dfed53747a1a430326eb3d9f0cbd824.sock",
+	"YARN_VERSION": "1.22.19",
+	"HOME": "/root",
+	"REMOTE_CONTAINERS_SOCKETS": "[\"/tmp/vscode-ssh-auth-28b3e8da2dfed53747a1a430326eb3d9f0cbd824.sock\"]",
+	"SHLVL": "1",
+	"PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+	"NODE_VERSION": "18.13.0",
+	"_": "/bin/cat"
+}

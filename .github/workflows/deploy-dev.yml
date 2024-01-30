@@ -1,0 +1,65 @@
+name: Deploy FE - develop
+on:
+  push:
+    branches:
+      - 'develop'
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Github action IP
+        id: ip
+        uses: haythem/public-ip@v1.3
+
+      - name: Setting environment variables..
+        run: |
+          echo "AWS_DEFAULT_REGION=us-east-1" >> $GITHUB_ENV
+          echo "AWS_SG_NAME=dev-ohio-eat-vm-sg" >> $GITHUB_ENV
+
+      - name: Add Github Actions IP to Security group
+        run: |
+          aws ec2 authorize-security-group-ingress --group-name ${{ env.AWS_SG_NAME }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.TG_GITHUB_ACTION_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TG_GITHUB_ACTION_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ env.AWS_DEFAULT_REGION }}
+
+      - uses: actions/checkout@v3
+
+      - name: Setup react.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - run: yarn install
+      - run: yarn build:dev
+      - run: mv dist eat-dev.techgenies.us
+
+      - name: Copy dist
+        uses: appleboy/scp-action@master
+        with:
+          host: ec2-75-101-195-169.compute-1.amazonaws.com
+          username: jminaya
+          key: ${{ secrets.TECHGENIES_DEV_PRIVATE_KEY }}
+          port: 22
+          source: 'eat-dev.techgenies.us'
+          target: '/home/jminaya'
+
+      - name: Setup server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ec2-75-101-195-169.compute-1.amazonaws.com
+          username: jminaya
+          key: ${{ secrets.TECHGENIES_DEV_PRIVATE_KEY }}
+          port: 22
+          script: |
+            sudo rm -rf /var/www/eat-dev.techgenies.us
+            sudo mv /home/jminaya/eat-dev.techgenies.us /var/www/eat-dev.techgenies.us
+
+      - name: Remove Github Actions IP from security group
+        run: |
+          aws ec2 revoke-security-group-ingress --group-name ${{ env.AWS_SG_NAME }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.TG_GITHUB_ACTION_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TG_GITHUB_ACTION_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ env.AWS_DEFAULT_REGION }}
+        if: always()
